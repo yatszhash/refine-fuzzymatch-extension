@@ -1,0 +1,4 @@
+module/MOD-INF/classes/
+.idea
+.settings
+*.iml
