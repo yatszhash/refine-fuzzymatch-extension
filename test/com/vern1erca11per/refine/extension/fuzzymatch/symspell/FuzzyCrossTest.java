@@ -68,8 +68,8 @@ public class FuzzyCrossTest extends RefineTest {
     public void crossFunctionWithTwoKeys() throws Exception {
         List<String> fromKeyColumnNames = Arrays.asList("recipient", "address");
         List<String> toKeyColumnNames = Arrays.asList("name", "address");
-        List<Integer> maxEditDistances = Arrays.asList(1, 2);
-        int returnMaxRowCount = 5;
+        List<Long> maxEditDistances = Arrays.asList((long) 1, (long) 2);
+        long returnMaxRowCount = 5;
 
         Row queryRow = fromProject.rows.get(1);
         HasFieldsListImpl rows = (HasFieldsListImpl) invoke("fuzzyCross",
@@ -90,8 +90,8 @@ public class FuzzyCrossTest extends RefineTest {
     public void crossFunctionWithTwoKeysButOnlyMatchEither() throws Exception {
         List<String> fromKeyColumnNames = Arrays.asList("recipient", "address");
         List<String> toKeyColumnNames = Arrays.asList("name", "address");
-        List<Integer> maxEditDistances = Arrays.asList(1, 2);
-        int returnMaxRowCount = 5;
+        List<Long> maxEditDistances = Arrays.asList((long) 1, (long) 2);
+        long returnMaxRowCount = 5;
         int rowIdx = 0;
 
         Row queryRow = fromProject.rows.get(rowIdx);
@@ -106,8 +106,8 @@ public class FuzzyCrossTest extends RefineTest {
     public void crossFunctionWithNotNotRegisteredRow() throws Exception {
         List<String> fromKeyColumnNames = Arrays.asList("recipient", "address");
         List<String> toKeyColumnNames = Arrays.asList("name", "address");
-        List<Integer> maxEditDistances = Arrays.asList(1, 2);
-        int returnMaxRowCount = 5;
+        List<Long> maxEditDistances = Arrays.asList((long) 1, (long) 2);
+        long returnMaxRowCount = 5;
         int rowIdx = 2;
 
         Row queryRow = fromProject.rows.get(rowIdx);
@@ -125,8 +125,8 @@ public class FuzzyCrossTest extends RefineTest {
     public void crossFunctionNonLiteralValue() throws Exception {
         List<String> fromKeyColumnNames = Arrays.asList("recipient", "address");
         List<String> toKeyColumnNames = Arrays.asList("name", "address");
-        List<Integer> maxEditDistances = Arrays.asList(1, 2);
-        int returnMaxRowCount = 5;
+        List<Long> maxEditDistances = Arrays.asList((long) 1, (long) 2);
+        long returnMaxRowCount = 5;
         int rowIdx = 2;
 
         Row queryRow = fromProject.rows.get(rowIdx);

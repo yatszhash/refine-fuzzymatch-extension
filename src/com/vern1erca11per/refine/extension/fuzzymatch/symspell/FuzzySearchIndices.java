@@ -73,6 +73,10 @@ public class FuzzySearchIndices {
         }
     }
 
+    public void creste(long maxEditDistance) {
+        create(Integer.parseInt(Long.toString(maxEditDistance)));
+    }
+
     protected void addIndices(int rowIndex, String rawWord, String editedWord, int currentDeletionCount) {
         if (rawWord.length() <= 1 || editedWord.length() <= 1
                 || currentDeletionCount > maxEditDistance) {
@@ -99,7 +103,6 @@ public class FuzzySearchIndices {
             addIndices(rowIndex, rawWord, deletion, currentDeletionCount + 1);
         }
     }
-
 
     /**
      * @param value
@@ -144,6 +147,16 @@ public class FuzzySearchIndices {
         }
 
         return candidates;
+    }
+
+    /**
+     * @param value
+     * @param maxSearchEditDistance
+     * @return
+     */
+    public Set<Integer> lookup(String value, long maxSearchEditDistance, long maxNumRows) {
+        return lookup(value, Integer.parseInt(Long.toString(maxSearchEditDistance)),
+                Integer.parseInt(Long.toString(maxNumRows)));
     }
 
     protected Set<String> createQueries(Set<String> previousQueries) {

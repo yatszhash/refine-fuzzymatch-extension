@@ -39,10 +39,19 @@ public class FuzzyIndicesModel implements OverlayModel {
         columnIndicesMap.put(columnName, indices);
     }
 
+    public void createIndices(Project project, String columnName, long maxDistance) {
+        //FIXME it's not safe, but grel only support long value, but I want to avoid larger
+        // memory consuming by retaining long indices
+        createIndices(project, columnName, Integer.parseInt(Long.toString(maxDistance)));
+    }
+
     public boolean hasIndices(Project project, String columnName, int maxDistance) {
         return columnIndicesMap.containsKey(columnName) && columnIndicesMap.get(columnName).maxEditDistance <= maxDistance;
     }
 
+    public boolean hasIndices(Project project, String columnName, long maxDistance) {
+        return hasIndices(project, columnName, Integer.parseInt(Long.toString(maxDistance)));
+    }
     public void removeIndices(String columnName) {
         columnIndicesMap.remove(columnName);
     }

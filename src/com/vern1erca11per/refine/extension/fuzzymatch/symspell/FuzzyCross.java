@@ -17,6 +17,7 @@ import java.util.Properties;
 import java.util.Set;
 
 public class FuzzyCross implements Function {
+    public static final String PROJECT_NOT_EXIST_MESSAGE = "project %s doesn't exist";
 
 
     public enum ALGORITHMS {
@@ -30,14 +31,27 @@ public class FuzzyCross implements Function {
 
     //TODO performance test
     // TODO should support prefix search?
+
+    /**
+     * @param bindings
+     * @param args     require 6 elements [
+     *                 row (type = WrappedRow),
+     *                 fromProjectKeyColumnNames (type = StringArry, List of String, String),
+     *                 toProject (type = String(Name) or Long(Id) ),
+     *                 toProjectKeyColumnNames (type = StringArry or List of String or String),
+     *                 editDistanceThresholds (long or longArray or List <long>),
+     *                 candidtatesCountThreshold to abort search (long)
+     *                 ]
+     * @return
+     */
     public Object call(Properties bindings, Object[] args) {
         WrappedRow row;
         Project fromProject;
         List<String> fromKeyColumnNames;
         Project toProject;
         List<String> toKeyColumnNames;
-        List<Integer> maxEditDistances;
-        Integer returnMaxRowCount;
+        List<Long> maxEditDistances;
+        Long returnMaxRowCount;
         Integer numKeys;
 
         //TODO remove try block for performance optimization
@@ -54,8 +68,8 @@ public class FuzzyCross implements Function {
                     args[1], fromProject);
             toProject = parseProject(args[2]);
             toKeyColumnNames = parseColumnNames(args[3], toProject);
-            maxEditDistances = parsePositiveIntegers(args[4], "distance");
-            returnMaxRowCount = parsePositiveInt(args[5], "row count");
+            maxEditDistances = parsePositiveNumbers(args[4], "distance");
+            returnMaxRowCount = parsePositiveNumber(args[5], "row count");
 
             numKeys = toKeyColumnNames.size();
             if (numKeys != fromKeyColumnNames.size() || numKeys != maxEditDistances.size()) {
@@ -70,7 +84,7 @@ public class FuzzyCross implements Function {
         Set<Integer> candidateRowNums = null;
         for (int i = 0; i < numKeys; i++) {
             String columnName = toKeyColumnNames.get(i);
-            Integer maxDistance = maxEditDistances.get(i);
+            Long maxDistance = maxEditDistances.get(i);
             if (!model.hasIndices(toProject, columnName, maxDistance)) {
                 model.createIndices(toProject, columnName, maxDistance);
             }
@@ -180,48 +194,50 @@ public class FuzzyCross implements Function {
         if (project != null) {
             return project;
         }
-        throw new IllegalArgumentException(String.format("project %s doesn't exist", v.toString()));
+        throw new IllegalArgumentException(String.format(PROJECT_NOT_EXIST_MESSAGE,
+                v.toString()));
     }
 
-    protected int parsePositiveInt(Object v, String parameterName) {
-        if (v instanceof Integer && (int) v >= 0) {
-            return (int) v;
+    protected long parsePositiveNumber(Object v, String parameterName) {
+        if ((v instanceof Long) && (long) v >= 0) {
+            return (long) v;
         }
         throw new IllegalArgumentException(String.format("%s should be positive int or 0", parameterName));
     }
 
-    protected List<Integer> parsePositiveIntegers(Object l, String parameterName) {
-        if (l == null || (!(l instanceof Integer) && !l.getClass().isArray() && !(l instanceof List<?>))) {
-            throw new IllegalArgumentException("require integer, array or list of integers for maxDistances");
+    protected List<Long> parsePositiveNumbers(Object l, String parameterName) {
+        if (l == null || (!(l instanceof Long) && !l.getClass().isArray()
+                && !(l instanceof List<?>))) {
+            throw new IllegalArgumentException("require long, array or list of longs for maxDistances");
         }
 
-        List<Integer> integers;
-        if (l instanceof Integer) {
-            integers = new ArrayList<>();
-            integers.add(parsePositiveInt(l, parameterName));
-            return integers;
+        List<Long> numbers;
+        if (l instanceof Long) {
+            numbers = new ArrayList<>();
+            numbers.add(parsePositiveNumber(l, parameterName));
+            return numbers;
         }
 
         if (l.getClass().isArray()) {
             Object[] lArray = (Object[]) l;
             int length = lArray.length;
-            integers = new ArrayList<>(length);
+            numbers = new ArrayList<>(length);
 
             for (Object c : lArray) {
-                integers.add(parsePositiveInt(c, parameterName));
+                numbers.add(parsePositiveNumber(c, parameterName));
             }
-            return integers;
+            return numbers;
         }
 
         List<Object> lList = ExpressionUtils.toObjectList(l);
         int length = lList.size();
-        integers = new ArrayList<>(length);
+        numbers = new ArrayList<>(length);
 
         for (Object c : lList) {
-            integers.add(parsePositiveInt(c, parameterName));
+            numbers.add(parsePositiveNumber(c, parameterName));
         }
 
-        return integers;
+        return numbers;
     }
 
     public void write(JSONWriter writer, Properties options) throws JSONException {
