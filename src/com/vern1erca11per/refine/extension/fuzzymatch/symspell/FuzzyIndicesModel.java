@@ -1,8 +1,10 @@
 package com.vern1erca11per.refine.extension.fuzzymatch.symspell;
 
+import com.google.refine.model.AbstractOperation;
 import com.google.refine.model.OverlayModel;
 import com.google.refine.model.Project;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.JSONWriter;
 
 import java.util.HashMap;
@@ -19,6 +21,20 @@ public class FuzzyIndicesModel implements OverlayModel {
     public FuzzyIndicesModel() {
         columnIndicesMap = new HashMap<>();
     }
+
+    public static OverlayModel load(Project project, JSONObject json) {
+        return new FuzzyIndicesModel();
+    }
+
+    public static AbstractOperation recunstruct(Project project, JSONObject json) {
+        return new AbstractOperation() {
+            @Override
+            public void write(JSONWriter jsonWriter, Properties properties) throws JSONException {
+                //TODO implement
+            }
+        };
+    }
+
 
     //TODO add project indices
     public void createIndices(Project project, String columnName, int maxDistance) {
@@ -76,6 +92,14 @@ public class FuzzyIndicesModel implements OverlayModel {
 
     @Override
     public void write(JSONWriter jsonWriter, Properties properties) throws JSONException {
-        //TODO implement
+        //T writer.object();
+        //        writer.key("description");
+        //        writer.value("join with another project by column");
+        //        writer.key("params");
+        //        writer.value("cell c or string value, string projectName, string columnName");
+        //        writer.key("returns");
+        //        writer.value("array");
+        //        writer.endObject();ODO implement
+
     }
 }

@@ -49,6 +49,7 @@ public class FuzzySearchIndices {
 
     public void create(int maxEditDistance) {
         //TODO can it be paralleled?
+        //TODO support prefix search
         if (maxEditDistance < 0) {
             throw new IllegalArgumentException("maxEditDistance should be positive or 0");
         }

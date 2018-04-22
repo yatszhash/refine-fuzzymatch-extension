@@ -50,6 +50,7 @@ public class FuzzyCross implements Function {
         List<String> fromKeyColumnNames;
         Project toProject;
         List<String> toKeyColumnNames;
+        // very slow if maxEditDistance >= 5
         List<Long> maxEditDistances;
         Long returnMaxRowCount;
         Integer numKeys;
@@ -79,7 +80,13 @@ public class FuzzyCross implements Function {
             return new EvalError(e);
         }
 
-        FuzzyIndicesModel model = (FuzzyIndicesModel) toProject.overlayModels.get("FuzzyIndicesModel");
+        String modelName = "FuzzyIndicesModel";
+        FuzzyIndicesModel model = (FuzzyIndicesModel) toProject.overlayModels.get(modelName);
+
+        //FIXME is this a safe operation?
+        if (model == null) {
+            toProject.overlayModels.put(modelName, new FuzzyIndicesModel());
+        }
 
         Set<Integer> candidateRowNums = null;
         for (int i = 0; i < numKeys; i++) {
