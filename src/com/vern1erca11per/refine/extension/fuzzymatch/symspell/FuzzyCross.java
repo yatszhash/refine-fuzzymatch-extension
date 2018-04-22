@@ -71,8 +71,8 @@ public class FuzzyCross implements Function {
         for (int i = 0; i < numKeys; i++) {
             String columnName = toKeyColumnNames.get(i);
             Integer maxDistance = maxEditDistances.get(i);
-            if (!model.hasIndices(columnName, maxDistance)) {
-                model.createIndices(columnName, maxDistance);
+            if (!model.hasIndices(toProject, columnName, maxDistance)) {
+                model.createIndices(toProject, columnName, maxDistance);
             }
 
             //TODO allow OR

@@ -14,17 +14,23 @@ public class FuzzyIndicesModel implements OverlayModel {
     protected Map<String, FuzzySearchIndices> columnIndicesMap;
     Project project;
 
-    private FuzzyIndicesModel() {
-    }
 
-    public FuzzyIndicesModel(Project project) {
-        this.project = project;
+    //TODO remove project
+    public FuzzyIndicesModel() {
         columnIndicesMap = new HashMap<>();
     }
 
-    public void createIndices(String columnName, int maxDistance) {
+    //TODO add project indices
+    public void createIndices(Project project, String columnName, int maxDistance) {
         //TODO should check equality of the column?
-        if (hasIndices(columnName, maxDistance)) {
+        if (this.project == null) {
+            this.project = project;
+        } else {
+            if (this.project != project) {
+                throw new IllegalArgumentException("all the projects in an indices model should be same.");
+            }
+        }
+        if (hasIndices(project, columnName, maxDistance)) {
             return;
         }
 
@@ -33,7 +39,7 @@ public class FuzzyIndicesModel implements OverlayModel {
         columnIndicesMap.put(columnName, indices);
     }
 
-    public boolean hasIndices(String columnName, int maxDistance) {
+    public boolean hasIndices(Project project, String columnName, int maxDistance) {
         return columnIndicesMap.containsKey(columnName) && columnIndicesMap.get(columnName).maxEditDistance <= maxDistance;
     }
 

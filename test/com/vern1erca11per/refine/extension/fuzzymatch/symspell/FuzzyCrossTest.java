@@ -49,7 +49,7 @@ public class FuzzyCrossTest extends RefineTest {
                 + "3,john,120 Main .\n"
                 + "4,anne,17 Morning Crescent\n";
         toProject = createCSVProject(projectName, input);
-        toProject.overlayModels.put("FuzzyIndicesModel", new FuzzyIndicesModel(toProject));
+        toProject.overlayModels.put("FuzzyIndicesModel", new FuzzyIndicesModel());
 
         projectName = "Typographical recipients";
         input = "gift,recipient,address\n"
