@@ -4,16 +4,22 @@ import com.google.refine.model.ModelException;
 import com.google.refine.model.Project;
 import com.google.refine.tests.RefineTest;
 import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONWriter;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import static org.testng.Assert.assertEquals;
@@ -193,6 +199,35 @@ public class FuzzySearchIndicesTest extends RefineTest {
 
         String key = "acc";
         Set<Integer> actual = sut.lookup(key, 3, maxRowNum);
+    }
+
+    @Test
+    public void testWriteAndLoad() throws IOException {
+        String columnName = "COLUMN2";
+        int maxDistance = 2;
+
+        FuzzySearchIndices sut = new FuzzySearchIndices(project, columnName);
+        sut.invertIndicesList = createTestIndices(maxDistance);
+        sut.maxEditDistance = maxDistance;
+
+        Path tempPath = Files.createTempFile("TestFuzzyIndicesModelTest", ".json");
+        try {
+            try (BufferedWriter bw = Files.newBufferedWriter(tempPath)) {
+                JSONWriter writer = new JSONWriter(bw);
+                Properties options = new Properties();
+                sut.write(writer, options);
+            }
+
+
+            JSONObject jsonObject = new JSONObject(new String(Files.readAllBytes(tempPath)));
+            FuzzySearchIndices loaded = FuzzySearchIndices.load(project, jsonObject);
+
+            assertEquals(sut, loaded);
+        } finally {
+            if (Files.exists(tempPath)) {
+                Files.delete(tempPath);
+            }
+        }
     }
 
 }

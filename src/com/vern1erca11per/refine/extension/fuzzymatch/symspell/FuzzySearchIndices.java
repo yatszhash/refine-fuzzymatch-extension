@@ -1,23 +1,30 @@
 package com.vern1erca11per.refine.extension.fuzzymatch.symspell;
 
+import com.google.refine.Jsonizable;
 import com.google.refine.expr.ExpressionUtils;
 import com.google.refine.model.Column;
 import com.google.refine.model.Project;
 import com.google.refine.model.Row;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONWriter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 
 //TODO support serialize
-public class FuzzySearchIndices {
+public class FuzzySearchIndices implements Jsonizable {
     //TODO replace with more efficient data structure
     //TODO add store count for correct answer
     List<InverseIndices> invertIndicesList;
-    String srcColumnDigest;
+    //String srcColumnDigest;
     String columnName;
     Project project;
     int maxEditDistance = 0;
@@ -27,11 +34,57 @@ public class FuzzySearchIndices {
         OPTIMIZED_DAMEREOU
     }
 
-    public static final class InverseIndices {
+    public static final class InverseIndices implements Jsonizable {
         Map<String, Set<Integer>> indices;
 
         public InverseIndices() {
             indices = new HashMap<>();
+        }
+
+        @Override
+        public void write(JSONWriter writer, Properties options) {
+            writer.object();
+            for (Map.Entry<String, Set<Integer>> index : indices.entrySet()) {
+
+                writer.key(index.getKey());
+                writer.array();
+                for (int rowNumber : index.getValue()) {
+                    writer.value(rowNumber);
+                }
+                writer.endArray();
+
+            }
+            writer.endObject();
+        }
+
+        public static InverseIndices load(JSONObject jsonObject){
+            InverseIndices inverseIndices = new InverseIndices();
+            Set<String> keys = jsonObject.keySet();
+
+            for (String key: keys){
+                JSONArray rowNumbersJsonArray = jsonObject.getJSONArray(key);
+                Set<Integer> rowNumbers = new HashSet<>(rowNumbersJsonArray.length());
+
+                for (Object rowNumber: rowNumbersJsonArray){
+                    rowNumbers.add((int) rowNumber);
+                }
+
+                inverseIndices.indices.put(key, rowNumbers);
+            }
+            return inverseIndices;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            InverseIndices indices1 = (InverseIndices) o;
+            return Objects.equals(indices, indices1.indices);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(indices);
         }
     }
 
@@ -190,4 +243,54 @@ public class FuzzySearchIndices {
         }
     }
 
+    public static FuzzySearchIndices load(Project project, JSONObject jsonObject){
+        FuzzySearchIndices searchIndices = new FuzzySearchIndices(project, jsonObject.getString("columnName"));
+
+        searchIndices.maxEditDistance = jsonObject.getInt("maxEditDistance");
+
+        JSONArray indicesArray = jsonObject.getJSONArray("indices");
+        searchIndices.invertIndicesList = new ArrayList<>(indicesArray.length());
+
+        for (int i=0; i < indicesArray.length(); i++){
+            searchIndices.invertIndicesList.add(InverseIndices.load(indicesArray.getJSONObject(i)));
+        }
+        return searchIndices;
+    }
+
+    @Override
+    public void write(JSONWriter jsonWriter, Properties properties) throws JSONException {
+        jsonWriter.object();
+
+        jsonWriter.key("columnName");
+        jsonWriter.value(columnName);
+
+        jsonWriter.key("maxEditDistance");
+        jsonWriter.value(maxEditDistance);
+
+        jsonWriter.key("indices");
+
+        jsonWriter.array();
+        for (InverseIndices indices : invertIndicesList) {
+            indices.write(jsonWriter, properties);
+        }
+        jsonWriter.endArray();
+
+        jsonWriter.endObject();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FuzzySearchIndices indices = (FuzzySearchIndices) o;
+        return maxEditDistance == indices.maxEditDistance &&
+                Objects.equals(invertIndicesList, indices.invertIndicesList) &&
+                Objects.equals(columnName, indices.columnName) &&
+                Objects.equals(project, indices.project);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(invertIndicesList, columnName, project.id, maxEditDistance);
+    }
 }

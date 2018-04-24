@@ -8,13 +8,15 @@ import org.json.JSONObject;
 import org.json.JSONWriter;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 public class FuzzyIndicesModel implements OverlayModel {
     //TODO encapsule
     protected Map<String, FuzzySearchIndices> columnIndicesMap;
-    Project project;
+    protected Project project;
 
 
     //TODO remove project
@@ -22,21 +24,17 @@ public class FuzzyIndicesModel implements OverlayModel {
         columnIndicesMap = new HashMap<>();
     }
 
-    public static OverlayModel load(Project project, JSONObject json) {
-        return new FuzzyIndicesModel();
-    }
-
-    public static AbstractOperation recunstruct(Project project, JSONObject json) {
+    public static AbstractOperation reconstruct(Project project, JSONObject json) {
         return new AbstractOperation() {
             @Override
             public void write(JSONWriter jsonWriter, Properties properties) throws JSONException {
                 //TODO implement
+
             }
         };
     }
 
 
-    //TODO add project indices
     public void createIndices(Project project, String columnName, int maxDistance) {
         //TODO should check equality of the column?
         if (this.project == null) {
@@ -68,10 +66,10 @@ public class FuzzyIndicesModel implements OverlayModel {
     public boolean hasIndices(Project project, String columnName, long maxDistance) {
         return hasIndices(project, columnName, Integer.parseInt(Long.toString(maxDistance)));
     }
+
     public void removeIndices(String columnName) {
         columnIndicesMap.remove(columnName);
     }
-
 
     @Override
     public void onBeforeSave(Project project) {
@@ -90,16 +88,50 @@ public class FuzzyIndicesModel implements OverlayModel {
         //empty
     }
 
+    public static OverlayModel load(Project project, JSONObject jsonObj) {
+        FuzzyIndicesModel model = new FuzzyIndicesModel();
+
+        model.project = project;
+        JSONObject indicesMapJson = jsonObj.getJSONObject("indicesMap");
+        Iterator<String> columnNameIterator = indicesMapJson.keys();
+
+        while (columnNameIterator.hasNext()) {
+            String columnName = columnNameIterator.next();
+            model.columnIndicesMap.put(columnName, FuzzySearchIndices.load(project,
+                    indicesMapJson.getJSONObject(columnName)));
+        }
+
+        return model;
+    }
+
     @Override
     public void write(JSONWriter jsonWriter, Properties properties) throws JSONException {
-        //T writer.object();
-        //        writer.key("description");
-        //        writer.value("join with another project by column");
-        //        writer.key("params");
-        //        writer.value("cell c or string value, string projectName, string columnName");
-        //        writer.key("returns");
-        //        writer.value("array");
-        //        writer.endObject();ODO implement
+        jsonWriter.object();
+        jsonWriter.key("description");
+        jsonWriter.value("inverted indices for fuzzy match");
 
+        jsonWriter.key("indicesMap");
+        jsonWriter.object();
+        for (Map.Entry<String, FuzzySearchIndices> entry : columnIndicesMap.entrySet()) {
+            jsonWriter.key(entry.getKey());
+            entry.getValue().write(jsonWriter, properties);
+        }
+        jsonWriter.endObject();
+
+        jsonWriter.endObject();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FuzzyIndicesModel that = (FuzzyIndicesModel) o;
+        return Objects.equals(columnIndicesMap, that.columnIndicesMap) &&
+                Objects.equals(project, that.project);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(columnIndicesMap, project.id);
     }
 }
