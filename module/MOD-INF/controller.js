@@ -43,8 +43,11 @@ function init() {
   // Packages.java.lang.System.err.println(module.getMountPoint());
   //var libPath = new Packages.java.io.File(module.getPath(), "MOD-INF/lib/jython/").getCanonicalPath();
 
-  //var RS = Packages.com.google.refine.RefineServlet;
-  //RS.registerCommand(module, )
+  //register change
+  var RS = Packages.com.google.refine.RefineServlet;
+  RS.registerClassMapping("UpdateFuzzySearchIndicesModelChange",
+  "com.vern1erca11per.refine.extension.fuzzymatch.symspell.UpdateFuzzyIndicesModelChange");
+  RS.cacheClass(Packages.com.vern1erca11per.refine.extension.fuzzymatch.symspell.UpdateFuzzyIndicesModelChange);
 
   //var S = Packages.java.lang.System;
   //var currentLibPath = S.getProperty("");
@@ -62,6 +65,15 @@ function init() {
         "fuzzyCross",
         new Packages.com.vern1erca11per.refine.extension.fuzzymatch.symspell.FuzzyCross()
         );
+
+  //add operations
+  var operations = Packages.com.google.refine.operations;
+  var OR = operations.OperationRegistry.registerOperation(
+      module,
+      "createFuzzySearchIndicesModelOperation",
+      Packages.com.vern1erca11per.refine.extension.fuzzymatch.symspell.CreateFuzzySearchIndicesModelOperation
+  );
+
 
 //  // Script files to inject into /project page
 //  ClientSideResourceManager.addPaths(

@@ -24,14 +24,8 @@ public class FuzzyIndicesModel implements OverlayModel {
         columnIndicesMap = new HashMap<>();
     }
 
-    public static AbstractOperation reconstruct(Project project, JSONObject json) {
-        return new AbstractOperation() {
-            @Override
-            public void write(JSONWriter jsonWriter, Properties properties) throws JSONException {
-                //TODO implement
-
-            }
-        };
+    public static AbstractOperation reconstruct(Project project, JSONObject json) throws Exception {
+        return CreateFuzzySearchIndicesModelOperation.reconstruct(project, json);
     }
 
 
