@@ -114,7 +114,7 @@ public class FuzzySearchIndicesTest extends RefineTest {
         distance1Indices.indices.putIfAbsent("b", new HashSet<>(Arrays.asList(2, 3)));
         distance1Indices.indices.putIfAbsent("c", new HashSet<>(Arrays.asList(1, 4)));
         distance1Indices.indices.putIfAbsent("d", new HashSet<>(Arrays.asList(5)));
-       
+
         expected.add(distance1Indices);
 
         expected.add(new FuzzySearchIndices.InverseIndices());
@@ -264,10 +264,12 @@ public class FuzzySearchIndicesTest extends RefineTest {
     public void testWriteAndLoad() throws IOException {
         String columnName = "COLUMN2";
         int maxDistance = 2;
+        int prefixLength = 10;
 
         FuzzySearchIndices sut = new FuzzySearchIndices(project, columnName);
         sut.invertIndicesList = createTestIndices(maxDistance);
         sut.maxEditDistance = maxDistance;
+        sut.prefixLength = prefixLength;
 
         Path tempPath = Files.createTempFile("TestFuzzyIndicesModelTest", ".json");
         try {

@@ -292,7 +292,7 @@ public class FuzzySearchIndices implements Jsonizable {
         jsonWriter.value(maxEditDistance);
 
         jsonWriter.key("prefixLength");
-        jsonWriter.value(maxEditDistance);
+        jsonWriter.value(prefixLength);
 
         jsonWriter.key("indices");
 
