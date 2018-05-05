@@ -94,6 +94,48 @@ public class FuzzySearchIndicesTest extends RefineTest {
         }
     }
 
+    @Test
+    public void testCreateWithPrefix() {
+        int maxDistance = 2;
+        int prefixLength = 2;
+        String columnName = "COLUMN2";
+
+
+        List<FuzzySearchIndices.InverseIndices> expected = new ArrayList<>(maxDistance + 2);
+
+        FuzzySearchIndices.InverseIndices distance0Indices = new FuzzySearchIndices.InverseIndices();
+        distance0Indices.indices.putIfAbsent("ac", new HashSet<>(Arrays.asList(1, 4)));
+        distance0Indices.indices.putIfAbsent("ab", new HashSet<>(Arrays.asList(2, 3)));
+        distance0Indices.indices.putIfAbsent("ad", new HashSet<>(Arrays.asList(5)));
+        expected.add(distance0Indices);
+
+        FuzzySearchIndices.InverseIndices distance1Indices = new FuzzySearchIndices.InverseIndices();
+        distance1Indices.indices.putIfAbsent("a", new HashSet<>(Arrays.asList(1, 2, 3, 4, 5)));
+        distance1Indices.indices.putIfAbsent("b", new HashSet<>(Arrays.asList(2, 3)));
+        distance1Indices.indices.putIfAbsent("c", new HashSet<>(Arrays.asList(1, 4)));
+        distance1Indices.indices.putIfAbsent("d", new HashSet<>(Arrays.asList(5)));
+       
+        expected.add(distance1Indices);
+
+        expected.add(new FuzzySearchIndices.InverseIndices());
+
+        FuzzySearchIndices sut = new FuzzySearchIndices(project, columnName);
+
+        sut.create(maxDistance, prefixLength);
+
+        List<FuzzySearchIndices.InverseIndices> actual = sut.invertIndicesList;
+
+        assertEquals(actual.size(), expected.size());
+
+        for (int i = 0; i < actual.size(); i++) {
+            FuzzySearchIndices.InverseIndices actualIndices = actual.get(i);
+            FuzzySearchIndices.InverseIndices expectedIndices = expected.get(i);
+
+            assertEquals(actualIndices.indices, expectedIndices.indices);
+
+        }
+    }
+
     public List<FuzzySearchIndices.InverseIndices> createTestIndices(int maxDistance) {
 
         List<FuzzySearchIndices.InverseIndices> preCreated = new ArrayList<>(maxDistance + 3);
@@ -136,6 +178,23 @@ public class FuzzySearchIndicesTest extends RefineTest {
         String key = "acb";
         Set<Integer> expected = new HashSet<>(Arrays.asList(1, 2, 3, 4, 5));
         Set<Integer> actual = sut.lookup(key, 2, 10);
+        assertEquals(actual, expected);
+    }
+
+    @Test
+    public void testLookupWithInWordAndPrefix() {
+        int maxDistance = 2;
+        int prefixLength = 3;
+        String columnName = "COLUMN2";
+
+        FuzzySearchIndices sut = new FuzzySearchIndices(project, columnName);
+        sut.invertIndicesList = createTestIndices(maxDistance);
+        sut.maxEditDistance = maxDistance;
+        sut.prefixLength = prefixLength;
+
+        String key = "cdfaff";
+        Set<Integer> expected = new HashSet<>(Arrays.asList(1, 4, 5));
+        Set<Integer> actual = sut.lookup(key, maxDistance, 10);
         assertEquals(actual, expected);
     }
 
