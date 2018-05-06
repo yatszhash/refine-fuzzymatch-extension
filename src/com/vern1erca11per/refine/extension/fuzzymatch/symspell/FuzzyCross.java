@@ -97,6 +97,7 @@ public class FuzzyCross implements Function {
         }
 
         Set<Integer> candidateRowNums = null;
+        //TODO extract creation to command
         for (int i = 0; i < numKeys; i++) {
             String columnName = toKeyColumnNames.get(i);
             Long maxDistance = maxEditDistances.get(i);
