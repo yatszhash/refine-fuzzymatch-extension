@@ -34,13 +34,14 @@ public class FuzzyCross implements Function {
 
     /**
      * @param bindings
-     * @param args     require 6 elements [
+     * @param args     require 6 or 7 elements [
      *                 row (type = WrappedRow),
      *                 fromProjectKeyColumnNames (type = StringArry, List of String, String),
      *                 toProject (type = String(Name) or Long(Id) ),
      *                 toProjectKeyColumnNames (type = StringArry or List of String or String),
      *                 editDistanceThresholds (long or longArray or List <long>),
-     *                 candidtatesCountThreshold to abort search (long)
+     *                 candidtatesCountThreshold to abort search (long),
+     *                 prefix Length to create indices (long, optional)
      *                 ]
      * @return
      */
@@ -54,11 +55,12 @@ public class FuzzyCross implements Function {
         List<Long> maxEditDistances;
         Long returnMaxRowCount;
         Integer numKeys;
+        Long prefixLength;
 
         //TODO remove try block for performance optimization
         try {
-            if (args.length != 6) {
-                throw new IllegalArgumentException("The number of Arguments should be 6");
+            if (args.length != 6 && args.length != 7) {
+                throw new IllegalArgumentException("The number of Arguments should be 6 or 7");
             }
 
             //TODO support string list query
@@ -71,6 +73,12 @@ public class FuzzyCross implements Function {
             toKeyColumnNames = parseColumnNames(args[3], toProject);
             maxEditDistances = parsePositiveNumbers(args[4], "distance");
             returnMaxRowCount = parsePositiveNumber(args[5], "row count");
+
+            if (args.length == 7) {
+                prefixLength = parsePositiveNumber(args[6], "prefix length");
+            } else {
+                prefixLength = (long) FuzzySearchIndices.DEFAULT_PREFIX_LENGTH;
+            }
 
             numKeys = toKeyColumnNames.size();
             if (numKeys != fromKeyColumnNames.size() || numKeys != maxEditDistances.size()) {
@@ -92,8 +100,8 @@ public class FuzzyCross implements Function {
         for (int i = 0; i < numKeys; i++) {
             String columnName = toKeyColumnNames.get(i);
             Long maxDistance = maxEditDistances.get(i);
-            if (!model.hasIndices(toProject, columnName, maxDistance)) {
-                model.createIndices(toProject, columnName, maxDistance);
+            if (!model.hasIndices(toProject, columnName, maxDistance, prefixLength)) {
+                model.createIndices(toProject, columnName, maxDistance, prefixLength);
             }
 
             //TODO allow OR
@@ -250,9 +258,17 @@ public class FuzzyCross implements Function {
     public void write(JSONWriter writer, Properties options) throws JSONException {
         writer.object();
         writer.key("description");
-        writer.value("join with another project by column");
+        writer.value("join with another project by columns of fuzzy matching");
         writer.key("params");
-        writer.value("cell c or string value, string projectName, string columnName");
+        writer.value("6 or 7 params \n" +
+                "     *                 row (type = WrappedRow),\n" +
+                "     *                 fromProjectKeyColumnNames (type = StringArry, List of String, String),\n" +
+                "     *                 toProject (type = String(Name) or Long(Id) ),\n" +
+                "     *                 toProjectKeyColumnNames (type = StringArry or List of String or String),\n" +
+                "     *                 editDistanceThresholds (long or longArray or List <long>),\n" +
+                "     *                 candidtatesCountThreshold to abort search (long)\n" +
+                "     *                 prefix Length to create indices (long, optional)" +
+                "");
         writer.key("returns");
         writer.value("array");
         writer.endObject();

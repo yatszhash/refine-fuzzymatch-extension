@@ -23,11 +23,15 @@ import java.util.Set;
 public class FuzzySearchIndices implements Jsonizable {
     //TODO replace with more efficient data structure
     //TODO add store count for correct answer
+    //TODO support custom identifier column
+    public static int DEFAULT_PREFIX_LENGTH = 15;
+
     List<InverseIndices> invertIndicesList;
     //String srcColumnDigest;
     String columnName;
     Project project;
     int maxEditDistance = 0;
+    int prefixLength = 15;
 
     public enum DISTANCE_TYPE {
         //LEVENSHTEIN,
@@ -101,12 +105,21 @@ public class FuzzySearchIndices implements Jsonizable {
     }
 
     public void create(int maxEditDistance) {
+        create(maxEditDistance, DEFAULT_PREFIX_LENGTH);
+    }
+
+    public void create(int maxEditDistance, int prefixLength) {
         //TODO can it be paralleled?
         //TODO support prefix search
         if (maxEditDistance < 0) {
             throw new IllegalArgumentException("maxEditDistance should be positive or 0");
         }
         this.maxEditDistance = maxEditDistance;
+
+        if (prefixLength <= 0) {
+            throw new IllegalArgumentException("prefix length should be positive");
+        }
+        this.prefixLength = prefixLength;
 
         invertIndicesList = new ArrayList<>(this.maxEditDistance + 1);
 
@@ -122,13 +135,23 @@ public class FuzzySearchIndices implements Jsonizable {
             Row row = project.rows.get(i);
             Object value = row.getCellValue(column.getCellIndex());
             if (ExpressionUtils.isNonBlankData(value)) {
-                addIndices(i, value.toString(), value.toString(), 0);
+                String prefix = extractPrefix(value.toString());
+                //TODO normalize
+                addIndices(i, prefix, prefix, 0);
             }
         }
     }
 
     public void creste(long maxEditDistance) {
         create(Integer.parseInt(Long.toString(maxEditDistance)));
+    }
+
+    protected String extractPrefix(String rawString) {
+        if (prefixLength > rawString.length()) {
+            return rawString;
+        }
+
+        return rawString.substring(0, prefixLength);
     }
 
     protected void addIndices(int rowIndex, String rawWord, String editedWord, int currentDeletionCount) {
@@ -183,7 +206,7 @@ public class FuzzySearchIndices implements Jsonizable {
             Set<String> newQueries;
             if (i == 0) {
                 newQueries = new HashSet<>();
-                newQueries.add(value);
+                newQueries.add(extractPrefix(value));
             } else {
                 Set<String> previousQueries = queriesList.get(i - 1);
                 newQueries = createQueries(previousQueries);
@@ -247,6 +270,7 @@ public class FuzzySearchIndices implements Jsonizable {
         FuzzySearchIndices searchIndices = new FuzzySearchIndices(project, jsonObject.getString("columnName"));
 
         searchIndices.maxEditDistance = jsonObject.getInt("maxEditDistance");
+        searchIndices.prefixLength = jsonObject.getInt("prefixLength");
 
         JSONArray indicesArray = jsonObject.getJSONArray("indices");
         searchIndices.invertIndicesList = new ArrayList<>(indicesArray.length());
@@ -267,6 +291,9 @@ public class FuzzySearchIndices implements Jsonizable {
         jsonWriter.key("maxEditDistance");
         jsonWriter.value(maxEditDistance);
 
+        jsonWriter.key("prefixLength");
+        jsonWriter.value(prefixLength);
+
         jsonWriter.key("indices");
 
         jsonWriter.array();
@@ -284,6 +311,7 @@ public class FuzzySearchIndices implements Jsonizable {
         if (o == null || getClass() != o.getClass()) return false;
         FuzzySearchIndices indices = (FuzzySearchIndices) o;
         return maxEditDistance == indices.maxEditDistance &&
+                prefixLength == indices.prefixLength &&
                 Objects.equals(invertIndicesList, indices.invertIndicesList) &&
                 Objects.equals(columnName, indices.columnName) &&
                 Objects.equals(project, indices.project);
@@ -291,6 +319,7 @@ public class FuzzySearchIndices implements Jsonizable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(invertIndicesList, columnName, project.id, maxEditDistance);
+        return Objects.hash(invertIndicesList, columnName, project.id, maxEditDistance,
+                prefixLength);
     }
 }
