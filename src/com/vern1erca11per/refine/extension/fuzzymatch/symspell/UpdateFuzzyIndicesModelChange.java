@@ -20,9 +20,16 @@ class UpdateFuzzyIndicesModelChange implements Change {
     OverlayModel oldModel;
     Map<String, Integer> columnDistanceMap;
     FuzzyIndicesModel newModel;
+    int prefixLength = FuzzySearchIndices.DEFAULT_PREFIX_LENGTH;
 
     public UpdateFuzzyIndicesModelChange(Map<String, Integer> columnDistanceMap) {
+        this(columnDistanceMap, FuzzySearchIndices.DEFAULT_PREFIX_LENGTH);
+    }
+
+    public UpdateFuzzyIndicesModelChange(Map<String, Integer> columnDistanceMap,
+                                         int prefixLength) {
         this.columnDistanceMap = columnDistanceMap;
+        this.prefixLength = prefixLength;
     }
 
     @Override
@@ -39,7 +46,7 @@ class UpdateFuzzyIndicesModelChange implements Change {
             }
 
             for (Map.Entry<String, Integer> entry : columnDistanceMap.entrySet()) {
-                newModel.createIndices(project, entry.getKey(), entry.getValue());
+                newModel.createIndices(project, entry.getKey(), entry.getValue(), prefixLength);
             }
 
             project.overlayModels.put(FuzzyIndicesModel.class.getSimpleName(), newModel);
@@ -70,6 +77,9 @@ class UpdateFuzzyIndicesModelChange implements Change {
         }
         jsonWriter.endObject();
 
+        jsonWriter.key("prefixLength");
+        jsonWriter.value(prefixLength);
+
         jsonWriter.key("oldIndices");
         oldModel.write(jsonWriter, properties);
         jsonWriter.key("newIndices");
@@ -90,9 +100,10 @@ class UpdateFuzzyIndicesModelChange implements Change {
                                 Map.Entry::getKey,
                                 v -> Integer.parseInt(v.getValue().toString())
                         ));
+        int prefixLength = jsonObject.getInt("prefixLength");
 
 
-        UpdateFuzzyIndicesModelChange loadedChange = new UpdateFuzzyIndicesModelChange(columnDistanceMap);
+        UpdateFuzzyIndicesModelChange loadedChange = new UpdateFuzzyIndicesModelChange(columnDistanceMap, prefixLength);
 
         Project project = ProjectManager.singleton.getProject(jsonObject.getLong("projectID"));
 

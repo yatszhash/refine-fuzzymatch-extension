@@ -68,6 +68,30 @@ public class FuzzyCrossTest extends RefineTest {
     public void crossFunctionWithTwoKeys() throws Exception {
         List<String> fromKeyColumnNames = Arrays.asList("recipient", "address");
         List<String> toKeyColumnNames = Arrays.asList("name", "address");
+        List<Long> maxEditDistances = Arrays.asList((long) 0, (long) 2);
+        long returnMaxRowCount = 5;
+        long prefixLength = 2;
+
+        Row queryRow = fromProject.rows.get(1);
+        HasFieldsListImpl rows = (HasFieldsListImpl) invoke("fuzzyCross",
+                new WrappedRow(fromProject, 1, queryRow), fromKeyColumnNames,
+                toProject.getMetadata().getName(), toKeyColumnNames, maxEditDistances, returnMaxRowCount,
+                prefixLength);
+        Set<String> expected = new HashSet(Arrays.asList("1", "3"));
+
+        Assert.assertEquals(expected.size(), rows.length());
+        Set<String> actual = new HashSet<>();
+
+        for (HasFields row : rows) {
+            actual.add(((WrappedRow) row).row.getCellValue(0).toString());
+        }
+        Assert.assertEquals(actual, expected);
+    }
+
+    @Test
+    public void crossFunctionWithTwoKeysAndPrefixLength() throws Exception {
+        List<String> fromKeyColumnNames = Arrays.asList("recipient", "address");
+        List<String> toKeyColumnNames = Arrays.asList("name", "address");
         List<Long> maxEditDistances = Arrays.asList((long) 1, (long) 2);
         long returnMaxRowCount = 5;
 
@@ -85,6 +109,7 @@ public class FuzzyCrossTest extends RefineTest {
         }
         Assert.assertEquals(actual, expected);
     }
+
 
     @Test
     public void crossFunctionWithTwoKeysButOnlyMatchEither() throws Exception {

@@ -24,7 +24,7 @@ public class FuzzySearchIndices implements Jsonizable {
     //TODO replace with more efficient data structure
     //TODO add store count for correct answer
     //TODO support custom identifier column
-    int DEFAULT_PREFIX_LENGTH = 15;
+    public static int DEFAULT_PREFIX_LENGTH = 15;
 
     List<InverseIndices> invertIndicesList;
     //String srcColumnDigest;
