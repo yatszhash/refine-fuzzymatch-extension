@@ -24,13 +24,15 @@ so this project also aimed to support non-alphanumerical texts.
         - known limitation
             1. can't reconstruct and write
             2. can't flush based on change of project
+            3. very slow to construct
+            4. large memory consumption
 
 ### production
 
 
 
 ## upcoming feature
-1. reconcillation integration
+1. reconciliation integration
 1. learnable records match
 2. fuzzy parsing 
 3. user or project dictionary

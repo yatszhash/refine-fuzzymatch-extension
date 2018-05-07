@@ -1,2 +1,1 @@
-
-fuzzyCross(row, [ "title" ], "AbtBuy_Buy csv", [ "title" ], [ 2], 5)
+fuzzyCross(row, [ "title" ], "AbtBuy_Abt csv", [ "title" ], [ 4], 5, 15)[0].cells["title"].value

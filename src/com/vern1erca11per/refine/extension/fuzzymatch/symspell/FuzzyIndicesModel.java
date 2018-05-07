@@ -56,7 +56,7 @@ public class FuzzyIndicesModel implements OverlayModel {
 
     public boolean hasIndices(Project project, String columnName, int maxDistance, int prefixLength) {
         return columnIndicesMap.containsKey(columnName)
-                && columnIndicesMap.get(columnName).maxEditDistance <= maxDistance
+                && columnIndicesMap.get(columnName).maxEditDistance >= maxDistance
                 && columnIndicesMap.get(columnName).prefixLength == prefixLength;
     }
 
