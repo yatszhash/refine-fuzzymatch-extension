@@ -4,6 +4,7 @@ import com.google.refine.history.Change;
 import com.google.refine.history.HistoryEntry;
 import com.google.refine.model.AbstractOperation;
 import com.google.refine.model.Project;
+import com.google.refine.operations.OperationRegistry;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONWriter;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+//TODO fix write and reload history
 public class CreateFuzzySearchIndicesModelOperation extends AbstractOperation {
     final protected Map<String, Integer> columnDistanceMap;
     final protected Project project;
@@ -28,10 +30,17 @@ public class CreateFuzzySearchIndicesModelOperation extends AbstractOperation {
     public void write(JSONWriter jsonWriter, Properties properties) throws JSONException {
         jsonWriter.object();
 
+        jsonWriter.key("op");
+        jsonWriter.value(OperationRegistry.s_opClassToName.get(this.getClass()));
+
+        jsonWriter.key("columnDistanceMap");
+        jsonWriter.object();
         for (Map.Entry<String, Integer> entry : columnDistanceMap.entrySet()) {
             jsonWriter.key(entry.getKey());
             jsonWriter.value(entry.getValue());
         }
+        jsonWriter.endObject();
+
         jsonWriter.endObject();
     }
 
@@ -59,8 +68,9 @@ public class CreateFuzzySearchIndicesModelOperation extends AbstractOperation {
     static public AbstractOperation reconstruct(Project project, JSONObject jsonObject) throws Exception {
         Map<String, Integer> columnDistanceMap = new HashMap<>();
 
-        for (String key : jsonObject.keySet()) {
-            columnDistanceMap.put(key, jsonObject.getInt(key));
+        JSONObject columnDistanceJsonObj = jsonObject.getJSONObject("columnDistanceMap");
+        for (String key : columnDistanceJsonObj.keySet()) {
+            columnDistanceMap.put(key, columnDistanceJsonObj.getInt(key));
         }
         return new CreateFuzzySearchIndicesModelOperation(project, columnDistanceMap);
     }

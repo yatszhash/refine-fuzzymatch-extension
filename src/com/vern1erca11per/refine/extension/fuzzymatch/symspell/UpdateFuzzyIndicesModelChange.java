@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-class UpdateFuzzyIndicesModelChange implements Change {
+public class UpdateFuzzyIndicesModelChange implements Change {
     OverlayModel oldModel;
     Map<String, Integer> columnDistanceMap;
     FuzzyIndicesModel newModel;
