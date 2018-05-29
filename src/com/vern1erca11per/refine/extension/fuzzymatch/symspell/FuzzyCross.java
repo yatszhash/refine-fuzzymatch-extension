@@ -30,7 +30,6 @@ public class FuzzyCross implements Function {
     }
 
     //TODO performance test
-    // TODO should support prefix search?
 
     /**
      * @param bindings
@@ -91,13 +90,13 @@ public class FuzzyCross implements Function {
         String modelName = "FuzzyIndicesModel";
         FuzzyIndicesModel model = (FuzzyIndicesModel) toProject.overlayModels.get(modelName);
 
-        //FIXME is this a safe operation?
+        //FIXME remove and raise error
         if (model == null) {
             toProject.overlayModels.put(modelName, new FuzzyIndicesModel());
         }
 
         Set<Integer> candidateRowNums = null;
-        //TODO extract creation to command
+        //TODO replace indices creation with error
         for (int i = 0; i < numKeys; i++) {
             String columnName = toKeyColumnNames.get(i);
             Long maxDistance = maxEditDistances.get(i);
@@ -111,7 +110,7 @@ public class FuzzyCross implements Function {
             int fromColumnIndex = fromProject.columnModel.getColumnIndexByName(
                     fromKeyColumnNames.get(i));
             String value = (String) row.row.getCellValue(fromColumnIndex);
-
+            
             if (candidateRowNums != null) {
                 candidateRowNums.retainAll(model.columnIndicesMap.get(columnName)
                         .lookup(value, maxDistance, returnMaxRowCount)

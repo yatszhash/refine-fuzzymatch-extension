@@ -11,27 +11,13 @@
                                     <tr>
                                         <td colspan="3"><h3><span bind="views_configIndices"></span></h3></td>
                                     </tr>
-                                    <!--<tr>-->
-                                    <!--<td width="1%"><input type="radio" checked="true" name="split-by-mode" value="separator" id="$split-multi-valued-cells-by-separator" /></td>-->
-                                    <!--<td colspan="2"><label for="$split-multi-valued-cells-by-separator" bind="or_views_bySep"></label></td>-->
-                                    <!--</tr>-->
                                     <tr>
                                         <td></td>
                                         <td bind="views_distance"></td>
                                         <td><input type="number" size="10" value="2" bind="distanceInput"/>
-                                            <!--<input type="checkbox" bind="regexInput" id="$split-column-regex" />-->
-                                            <!--<label for="$split-multi-valued-cells-regex" bind="or_views_regExp"></label></td>-->
+                                        <td bind="views_prefixLength"></td>
+                                        <td><input type="number" size="10" value="2" bind="prefixLengthInput"/>
                                     </tr>
-                                    <!--<tr>-->
-                                    <!--<td width="1%"><input type="radio" name="split-by-mode" value="lengths" id="$split-multi-valued-cells-by-lengths" /></td>-->
-                                    <!--<td colspan="2"><label for="$split-multi-valued-cells-by-lengths" bind="or_views_fieldLen"></label></td>-->
-                                    <!--</tr>-->
-                                    <!--<tr><td></td>-->
-                                    <!--<td colspan="2"><textarea style="width: 100%;" bind="lengthsTextarea"></textarea></td>-->
-                                    <!--</tr>-->
-                                    <!--<tr><td></td>-->
-                                    <!--<td colspan="2" bind="or_views_listInt"></td>-->
-                                    <!--</tr>-->
                                 </table>
                             </div>
                         </td>

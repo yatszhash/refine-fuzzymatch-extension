@@ -15,15 +15,15 @@ import java.util.Properties;
 
 //TODO fix write and reload history
 public class CreateFuzzySearchIndicesModelOperation extends AbstractOperation {
-    final protected Map<String, Integer> columnDistanceMap;
+    final protected Map<String, IndexConfig> columnConfigMap;
     final protected Project project;
 
     public CreateFuzzySearchIndicesModelOperation(
             Project project,
-            Map<String, Integer> columnDistanceMap
+            Map<String, IndexConfig> columnConfigMap
     ) {
         this.project = project;
-        this.columnDistanceMap = columnDistanceMap;
+        this.columnConfigMap = columnConfigMap;
     }
 
     @Override
@@ -33,11 +33,11 @@ public class CreateFuzzySearchIndicesModelOperation extends AbstractOperation {
         jsonWriter.key("op");
         jsonWriter.value(OperationRegistry.s_opClassToName.get(this.getClass()));
 
-        jsonWriter.key("columnDistanceMap");
+        jsonWriter.key("columnConfigMap");
         jsonWriter.object();
-        for (Map.Entry<String, Integer> entry : columnDistanceMap.entrySet()) {
+        for (Map.Entry<String, IndexConfig> entry : columnConfigMap.entrySet()) {
             jsonWriter.key(entry.getKey());
-            jsonWriter.value(entry.getValue());
+            entry.getValue().write(jsonWriter, properties);
         }
         jsonWriter.endObject();
 
@@ -47,7 +47,7 @@ public class CreateFuzzySearchIndicesModelOperation extends AbstractOperation {
     @Override
     protected HistoryEntry createHistoryEntry(Project project, long historyEntryID) throws Exception {
 
-        Change change = new UpdateFuzzyIndicesModelChange(columnDistanceMap);
+        Change change = new UpdateFuzzyIndicesModelChange(columnConfigMap);
 
         return new HistoryEntry(
                 historyEntryID, project, getBriefDescription(project), this, change
@@ -57,31 +57,21 @@ public class CreateFuzzySearchIndicesModelOperation extends AbstractOperation {
     @Override
     protected String getBriefDescription(Project project) {
         StringBuilder description = new StringBuilder("Create FuzzySearchIndicesModel which has indices for ");
-        for (Map.Entry<String, Integer> entry : columnDistanceMap.entrySet()) {
-            description.append(String.format("(column %s, distance %d), ",
-                    entry.getKey(), entry.getValue()));
+        for (Map.Entry<String, IndexConfig> entry : columnConfigMap.entrySet()) {
+            description.append(String.format("(column %s distance %d prefixLen %d), ",
+                    entry.getKey(), entry.getValue().getMaxEditDistance(), entry.getValue().getPrefixLength()));
         }
 
         return description.toString();
     }
 
     static public AbstractOperation reconstruct(Project project, JSONObject jsonObject) throws Exception {
-        Map<String, Integer> columnDistanceMap = new HashMap<>();
+        Map<String, IndexConfig> columnDistanceMap = new HashMap<>();
 
-        JSONObject columnDistanceJsonObj = jsonObject.getJSONObject("columnDistanceMap");
+        JSONObject columnDistanceJsonObj = jsonObject.getJSONObject("columnConfigMap");
         for (String key : columnDistanceJsonObj.keySet()) {
-            columnDistanceMap.put(key, columnDistanceJsonObj.getInt(key));
+            columnDistanceMap.put(key, IndexConfig.load(columnDistanceJsonObj.getJSONObject(key)));
         }
         return new CreateFuzzySearchIndicesModelOperation(project, columnDistanceMap);
     }
-
-    //    @Override
-//    protected RowVisitor createRowVisitor(Project project, List<CellChange> list, long l) throws Exception {
-//        return null;
-//    }
-//
-//    @Override
-//    protected String createDescription(Column column, List<CellChange> list) {
-//        return null;
-//    }
 }

@@ -54,6 +54,7 @@ FuzzyIndicesCreationDialog.prototype.createDialog = function () {
     controls.dialogHeader.text("Create Fuzzy Index based on " + " " + this.column.name + " ");
     controls.views_configIndices.text("index config");
     controls.views_distance.text("threshold edit distance");
+    controls.views_prefixLength.text("prefix length");
     controls.okButton.html($.i18n._('core-buttons')["ok"]);
     controls.cancelButton.text($.i18n._('core-buttons')["cancel"]);
 
@@ -62,12 +63,13 @@ FuzzyIndicesCreationDialog.prototype.createDialog = function () {
         DialogSystem.dismissUntil(level - 1);
     };
 
-    var submit = function (distance) {
+    var submit = function (distance, prefixLength) {
         var body = {};
         body.indicesConfig = JSON.stringify([
             {
                 columnName: self_.column.name,
-                distance: distance
+                distance: distance,
+                prefixLength: prefixLength
             }]);
 
         Refine.postProcess(
@@ -93,7 +95,14 @@ FuzzyIndicesCreationDialog.prototype.createDialog = function () {
                 return;
             }
 
-            submit(distance);
+            var prefixLength = parseInt($.trim(controls.prefixLengthInput[0].value), 10);
+
+            if (!prefixLength || prefixLength <= 0) {
+                alert("prefix length should be positive integer or 0");
+                return;
+            }
+
+            submit(distance, prefixLength);
         }
     );
     controls.cancelButton.click(dismiss);

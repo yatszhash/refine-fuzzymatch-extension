@@ -93,47 +93,5 @@ function init() {
         ]
     );
 
-    // Style files to inject into /index page
-    // ClientSideResourceManager.addPaths(
-    //     "index/styles",
-    //     module,
-    //     [
-    //         "styles/jquery.contextMenu.css",
-    //         "styles/pure.css",
-    //         "styles/bootstrap.css",
-    //         "styles/database-import.less"
-    //     ]
-    // );
-
-    // Script files to inject into /project page
-    // ClientSideResourceManager.addPaths(
-    //     "project/scripts",
-    //     module,
-    //     [
-    //         "scripts/database-extension.js",
-    //         "scripts/project/database-exporters.js"
-    //     ]
-    // );
     logger.info("Fuzzy Match Extension Registration done!!");
 }
-
-/*
- * Function invoked to handle each request in a custom way.
- */
-//function process(path, request, response) {
-//  // Analyze path and handle this request yourself.
-//
-//  if (path == "/" || path == "") {
-//    var context = {};
-//    // here's how to pass things into the .vt templates
-//    context.someList = ["Superior","Michigan","Huron","Erie","Ontario"];
-//    context.someString = "foo";
-//    context.someInt = Packages.com.google.refine.sampleExtension.SampleUtil.stringArrayLength(context.someList);
-//
-//    send(request, response, "index.vt", context);
-//  }
-//}
-//
-//function send(request, response, template, context) {
-//  butterfly.sendTextFromTemplate(request, response, context, template, encoding, html);
-//}

@@ -20,12 +20,15 @@ public class CreateFuzzySearchIndicesCommand extends EngineDependentCommand {
         if (jsonString == null) {
             throw new ServletException("require indices config in parameter");
         }
-        Map<String, Integer> indicesConfig = new HashMap<>();
+        Map<String, IndexConfig> indicesConfig = new HashMap<>();
 
         for (Object eachConfig : new JSONArray(jsonString)) {
             if (eachConfig instanceof JSONObject) {
                 indicesConfig.put(((JSONObject) eachConfig).getString("columnName"),
-                        ((JSONObject) eachConfig).getInt("distance"));
+                        new IndexConfig(
+                                ((JSONObject) eachConfig).getInt("distance"),
+                                ((JSONObject) eachConfig).getInt("prefixLength")
+                        ));
             } else {
                 throw new SecurityException("invalid form of parameter");
             }
