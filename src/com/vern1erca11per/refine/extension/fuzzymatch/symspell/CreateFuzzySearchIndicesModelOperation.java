@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-//TODO fix write and reload history
 public class CreateFuzzySearchIndicesModelOperation extends AbstractOperation {
     final protected Map<String, IndexConfig> columnConfigMap;
     final protected Project project;

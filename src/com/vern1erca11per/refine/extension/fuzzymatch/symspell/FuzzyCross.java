@@ -54,6 +54,7 @@ public class FuzzyCross implements Function {
         List<Long> maxEditDistances;
         Long returnMaxRowCount;
         Integer numKeys;
+        //TODO support different prefix lengths
         Long prefixLength;
 
         //TODO remove try block for performance optimization
@@ -91,18 +92,23 @@ public class FuzzyCross implements Function {
         FuzzyIndicesModel model = (FuzzyIndicesModel) toProject.overlayModels.get(modelName);
 
         //FIXME remove and raise error
-        if (model == null) {
-            toProject.overlayModels.put(modelName, new FuzzyIndicesModel());
-        }
+//        if (model == null) {
+//            toProject.overlayModels.put(modelName, new FuzzyIndicesModel());
+//        }
 
         Set<Integer> candidateRowNums = null;
+
+        if (!hasIndices(toProject, toKeyColumnNames, maxEditDistances, numKeys, prefixLength, model)){
+            return new EvalError("you have to create indices from create indices command before call fuzzyCorss");
+        }
+
         //TODO replace indices creation with error
         for (int i = 0; i < numKeys; i++) {
             String columnName = toKeyColumnNames.get(i);
             Long maxDistance = maxEditDistances.get(i);
-            if (!model.hasIndices(toProject, columnName, maxDistance, prefixLength)) {
-                model.createIndices(toProject, columnName, maxDistance, prefixLength);
-            }
+//            if (!model.hasIndices(toProject, columnName, maxDistance, prefixLength)) {
+//                model.createIndices(toProject, columnName, maxDistance, prefixLength);
+//            }
 
             //TODO allow OR
             //TODO blocking with previous result
@@ -133,6 +139,19 @@ public class FuzzyCross implements Function {
             resultRows.add(new WrappedRow(toProject, rowIndex, toProject.rows.get(rowIndex)));
         }
         return resultRows;
+    }
+
+    protected boolean hasIndices(Project toProject, List<String> toKeyColumnNames,
+                              List<Long> maxEditDistances, Integer numKeys, Long prefixLength,
+                              FuzzyIndicesModel model) {
+        for (int i = 0; i < numKeys; i++) {
+            String columnName = toKeyColumnNames.get(i);
+            Long maxDistance = maxEditDistances.get(i);
+            if (!model.hasIndices(toProject, columnName, maxDistance, prefixLength)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     protected void parseParams(Object[] args) {

@@ -15,12 +15,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -72,11 +67,21 @@ public class FuzzyCrossTest extends RefineTest {
         long returnMaxRowCount = 5;
         long prefixLength = 2;
 
+        Map<String, IndexConfig> indexConfigMap = new HashMap<>();
+        indexConfigMap.put("name",
+                toIndexConfig(maxEditDistances.get(0), prefixLength));
+        indexConfigMap.put("address",
+                toIndexConfig(maxEditDistances.get(1), prefixLength));
+        new CreateFuzzySearchIndicesModelOperation(toProject, indexConfigMap)
+                .createHistoryEntry(toProject, 10).apply(toProject);
+
         Row queryRow = fromProject.rows.get(1);
+        //TODO separate command test
         HasFieldsListImpl rows = (HasFieldsListImpl) invoke("fuzzyCross",
                 new WrappedRow(fromProject, 1, queryRow), fromKeyColumnNames,
                 toProject.getMetadata().getName(), toKeyColumnNames, maxEditDistances, returnMaxRowCount,
                 prefixLength);
+
         Set<String> expected = new HashSet(Arrays.asList("1", "3"));
 
         Assert.assertEquals(expected.size(), rows.length());
@@ -88,12 +93,19 @@ public class FuzzyCrossTest extends RefineTest {
         Assert.assertEquals(actual, expected);
     }
 
+    protected IndexConfig toIndexConfig(long maxEditDistance, long prefixLength) {
+        return new IndexConfig(Integer.parseInt(Long.toString(maxEditDistance)),
+                Integer.parseInt(Long.toString(prefixLength)));
+    }
+
     @Test
     public void crossFunctionWithTwoKeysAndPrefixLength() throws Exception {
         List<String> fromKeyColumnNames = Arrays.asList("recipient", "address");
         List<String> toKeyColumnNames = Arrays.asList("name", "address");
         List<Long> maxEditDistances = Arrays.asList((long) 1, (long) 2);
         long returnMaxRowCount = 5;
+
+        createDefaultPrefixIndices(maxEditDistances);
 
         Row queryRow = fromProject.rows.get(1);
         HasFieldsListImpl rows = (HasFieldsListImpl) invoke("fuzzyCross",
@@ -119,12 +131,24 @@ public class FuzzyCrossTest extends RefineTest {
         long returnMaxRowCount = 5;
         int rowIdx = 0;
 
+        createDefaultPrefixIndices(maxEditDistances);
+
         Row queryRow = fromProject.rows.get(rowIdx);
         HasFieldsListImpl rows = (HasFieldsListImpl) invoke("fuzzyCross",
                 new WrappedRow(fromProject, rowIdx, queryRow), fromKeyColumnNames,
                 toProject.getMetadata().getName(), toKeyColumnNames, maxEditDistances, returnMaxRowCount);
 
         Assert.assertEquals(rows.length(), 0);
+    }
+
+    protected void createDefaultPrefixIndices(List<Long> maxEditDistances) throws Exception {
+        Map<String, IndexConfig> indexConfigMap = new HashMap<>();
+        indexConfigMap.put("name",
+                toIndexConfig(maxEditDistances.get(0), FuzzySearchIndices.DEFAULT_PREFIX_LENGTH));
+        indexConfigMap.put("address",
+                toIndexConfig(maxEditDistances.get(1), FuzzySearchIndices.DEFAULT_PREFIX_LENGTH));
+        new CreateFuzzySearchIndicesModelOperation(toProject, indexConfigMap)
+                .createHistoryEntry(toProject, 10).apply(toProject);
     }
 
     @Test
@@ -134,6 +158,8 @@ public class FuzzyCrossTest extends RefineTest {
         List<Long> maxEditDistances = Arrays.asList((long) 1, (long) 2);
         long returnMaxRowCount = 5;
         int rowIdx = 2;
+
+        createDefaultPrefixIndices(maxEditDistances);
 
         Row queryRow = fromProject.rows.get(rowIdx);
         HasFieldsListImpl rows = (HasFieldsListImpl) invoke("fuzzyCross",
@@ -153,6 +179,8 @@ public class FuzzyCrossTest extends RefineTest {
         List<Long> maxEditDistances = Arrays.asList((long) 1, (long) 2);
         long returnMaxRowCount = 5;
         int rowIdx = 2;
+
+        createDefaultPrefixIndices(maxEditDistances);
 
         Row queryRow = fromProject.rows.get(rowIdx);
 
