@@ -15,7 +15,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 
 /**
@@ -65,13 +72,13 @@ public class FuzzyCrossTest extends RefineTest {
         List<String> toKeyColumnNames = Arrays.asList("name", "address");
         List<Long> maxEditDistances = Arrays.asList((long) 0, (long) 2);
         long returnMaxRowCount = 5;
-        long prefixLength = 2;
+        List<Long> prefixLengths = Arrays.asList((long) 2, (long) 2);
 
         Map<String, IndexConfig> indexConfigMap = new HashMap<>();
         indexConfigMap.put("name",
-                toIndexConfig(maxEditDistances.get(0), prefixLength));
+                toIndexConfig(maxEditDistances.get(0), prefixLengths.get(0)));
         indexConfigMap.put("address",
-                toIndexConfig(maxEditDistances.get(1), prefixLength));
+                toIndexConfig(maxEditDistances.get(1), prefixLengths.get(1)));
         new CreateFuzzySearchIndicesModelOperation(toProject, indexConfigMap)
                 .createHistoryEntry(toProject, 10).apply(toProject);
 
@@ -80,7 +87,7 @@ public class FuzzyCrossTest extends RefineTest {
         HasFieldsListImpl rows = (HasFieldsListImpl) invoke("fuzzyCross",
                 new WrappedRow(fromProject, 1, queryRow), fromKeyColumnNames,
                 toProject.getMetadata().getName(), toKeyColumnNames, maxEditDistances, returnMaxRowCount,
-                prefixLength);
+                prefixLengths);
 
         Set<String> expected = new HashSet(Arrays.asList("1", "3"));
 
