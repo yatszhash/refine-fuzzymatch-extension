@@ -9,6 +9,7 @@ import org.json.JSONWriter;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -38,7 +39,7 @@ public class FuzzyIndicesModel implements OverlayModel {
                 throw new IllegalArgumentException("all the projects in an indices model should be same.");
             }
         }
-        if (hasIndices(project, columnName, maxDistance, prefixLength)) {
+        if (hasIndices(columnName, maxDistance, prefixLength)) {
             return;
         }
 
@@ -54,14 +55,14 @@ public class FuzzyIndicesModel implements OverlayModel {
                 Integer.parseInt(Long.toString(prefixLength)));
     }
 
-    public boolean hasIndices(Project project, String columnName, int maxDistance, int prefixLength) {
+    public boolean hasIndices(String columnName, int maxDistance, int prefixLength) {
         return columnIndicesMap.containsKey(columnName)
                 && columnIndicesMap.get(columnName).maxEditDistance >= maxDistance
                 && columnIndicesMap.get(columnName).prefixLength == prefixLength;
     }
 
-    public boolean hasIndices(Project project, String columnName, long maxDistance, long prefixLength) {
-        return hasIndices(project, columnName,
+    public boolean hasIndices(String columnName, long maxDistance, long prefixLength) {
+        return hasIndices(columnName,
                 Integer.parseInt(Long.toString(maxDistance)),
                 Integer.parseInt(Long.toString(prefixLength)));
     }
@@ -132,5 +133,17 @@ public class FuzzyIndicesModel implements OverlayModel {
     @Override
     public int hashCode() {
         return Objects.hash(columnIndicesMap, project.id);
+    }
+
+    public boolean hasAllIndices(List<String> toKeyColumnNames,
+                                 List<Long> maxEditDistances, Integer numKeys, List<Long> prefixLengths) {
+        for (int i = 0; i < numKeys; i++) {
+            String columnName = toKeyColumnNames.get(i);
+            Long maxDistance = maxEditDistances.get(i);
+            if (!hasIndices(columnName, maxDistance, prefixLengths.get(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 }

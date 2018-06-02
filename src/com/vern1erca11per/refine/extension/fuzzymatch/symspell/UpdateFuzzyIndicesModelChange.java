@@ -12,24 +12,20 @@ import org.json.JSONWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Writer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
-class UpdateFuzzyIndicesModelChange implements Change {
+
+public class UpdateFuzzyIndicesModelChange implements Change {
     OverlayModel oldModel;
-    Map<String, Integer> columnDistanceMap;
+    Map<String, IndexConfig> columnDistanceMap;
     FuzzyIndicesModel newModel;
-    int prefixLength = FuzzySearchIndices.DEFAULT_PREFIX_LENGTH;
+//    int prefixLength = FuzzySearchIndices.DEFAULT_PREFIX_LENGTH;
 
-    public UpdateFuzzyIndicesModelChange(Map<String, Integer> columnDistanceMap) {
-        this(columnDistanceMap, FuzzySearchIndices.DEFAULT_PREFIX_LENGTH);
-    }
 
-    public UpdateFuzzyIndicesModelChange(Map<String, Integer> columnDistanceMap,
-                                         int prefixLength) {
+    public UpdateFuzzyIndicesModelChange(Map<String, IndexConfig> columnDistanceMap) {
         this.columnDistanceMap = columnDistanceMap;
-        this.prefixLength = prefixLength;
     }
 
     @Override
@@ -45,8 +41,9 @@ class UpdateFuzzyIndicesModelChange implements Change {
                 newModel.columnIndicesMap.put(entry.getKey(), entry.getValue());
             }
 
-            for (Map.Entry<String, Integer> entry : columnDistanceMap.entrySet()) {
-                newModel.createIndices(project, entry.getKey(), entry.getValue(), prefixLength);
+            for (Map.Entry<String, IndexConfig> entry : columnDistanceMap.entrySet()) {
+                newModel.createIndices(project, entry.getKey(),
+                        entry.getValue().getMaxEditDistance(), entry.getValue().getPrefixLength());
             }
 
             project.overlayModels.put(FuzzyIndicesModel.class.getSimpleName(), newModel);
@@ -71,14 +68,19 @@ class UpdateFuzzyIndicesModelChange implements Change {
 
         jsonWriter.key("updatedIndices");
         jsonWriter.object();
-        for (Map.Entry<String, Integer> entry : columnDistanceMap.entrySet()) {
+        for (Map.Entry<String, IndexConfig> entry : columnDistanceMap.entrySet()) {
             jsonWriter.key(entry.getKey());
-            jsonWriter.value(entry.getValue());
+
+            jsonWriter.object();
+            jsonWriter.key("maxEditDistance");
+            jsonWriter.value(entry.getValue().getMaxEditDistance());
+
+            jsonWriter.key("prefixLength");
+            jsonWriter.value(entry.getValue().getPrefixLength());
+            jsonWriter.endObject();
         }
         jsonWriter.endObject();
 
-        jsonWriter.key("prefixLength");
-        jsonWriter.value(prefixLength);
 
         jsonWriter.key("oldIndices");
         oldModel.write(jsonWriter, properties);
@@ -92,18 +94,15 @@ class UpdateFuzzyIndicesModelChange implements Change {
         final JSONTokener tokener = new JSONTokener(reader.readLine());
 
         final JSONObject jsonObject = (JSONObject) tokener.nextValue();
+        Map<String, IndexConfig> columnDistanceMap = new HashMap<>();
 
-        Map<String, Integer> columnDistanceMap =
-                jsonObject.getJSONObject("updatedIndices")
-                        .toMap().entrySet().stream()
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                v -> Integer.parseInt(v.getValue().toString())
-                        ));
-        int prefixLength = jsonObject.getInt("prefixLength");
+        JSONObject updatedIndicesJsonObject = jsonObject.getJSONObject("updatedIndices");
+        for (String key : updatedIndicesJsonObject.keySet()) {
+            columnDistanceMap.put(key,
+                    IndexConfig.load(updatedIndicesJsonObject.getJSONObject(key)));
+        }
 
-
-        UpdateFuzzyIndicesModelChange loadedChange = new UpdateFuzzyIndicesModelChange(columnDistanceMap, prefixLength);
+        UpdateFuzzyIndicesModelChange loadedChange = new UpdateFuzzyIndicesModelChange(columnDistanceMap);
 
         Project project = ProjectManager.singleton.getProject(jsonObject.getLong("projectID"));
 

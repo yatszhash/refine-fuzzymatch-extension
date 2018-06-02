@@ -30,7 +30,6 @@ public class FuzzyCross implements Function {
     }
 
     //TODO performance test
-    // TODO should support prefix search?
 
     /**
      * @param bindings
@@ -55,7 +54,7 @@ public class FuzzyCross implements Function {
         List<Long> maxEditDistances;
         Long returnMaxRowCount;
         Integer numKeys;
-        Long prefixLength;
+        List<Long> prefixLength;
 
         //TODO remove try block for performance optimization
         try {
@@ -74,13 +73,16 @@ public class FuzzyCross implements Function {
             maxEditDistances = parsePositiveNumbers(args[4], "distance");
             returnMaxRowCount = parsePositiveNumber(args[5], "row count");
 
+            numKeys = toKeyColumnNames.size();
             if (args.length == 7) {
-                prefixLength = parsePositiveNumber(args[6], "prefix length");
+                prefixLength = parsePositiveNumbers(args[6], "prefix length");
             } else {
-                prefixLength = (long) FuzzySearchIndices.DEFAULT_PREFIX_LENGTH;
+                prefixLength = new ArrayList<>(numKeys);
+                for (int i = 0; i < numKeys; i++) {
+                    prefixLength.add((long) FuzzySearchIndices.DEFAULT_PREFIX_LENGTH);
+                }
             }
 
-            numKeys = toKeyColumnNames.size();
             if (numKeys != fromKeyColumnNames.size() || numKeys != maxEditDistances.size()) {
                 throw new IllegalArgumentException("the sizes of key columns and thresholds should be equal");
             }
@@ -91,19 +93,15 @@ public class FuzzyCross implements Function {
         String modelName = "FuzzyIndicesModel";
         FuzzyIndicesModel model = (FuzzyIndicesModel) toProject.overlayModels.get(modelName);
 
-        //FIXME is this a safe operation?
-        if (model == null) {
-            toProject.overlayModels.put(modelName, new FuzzyIndicesModel());
+        Set<Integer> candidateRowNums = null;
+
+        if (!model.hasAllIndices(toKeyColumnNames, maxEditDistances, numKeys, prefixLength)) {
+            return new EvalError("you have to create indices from create indices command before call fuzzyCorss");
         }
 
-        Set<Integer> candidateRowNums = null;
-        //TODO extract creation to command
         for (int i = 0; i < numKeys; i++) {
             String columnName = toKeyColumnNames.get(i);
             Long maxDistance = maxEditDistances.get(i);
-            if (!model.hasIndices(toProject, columnName, maxDistance, prefixLength)) {
-                model.createIndices(toProject, columnName, maxDistance, prefixLength);
-            }
 
             //TODO allow OR
             //TODO blocking with previous result
@@ -111,7 +109,7 @@ public class FuzzyCross implements Function {
             int fromColumnIndex = fromProject.columnModel.getColumnIndexByName(
                     fromKeyColumnNames.get(i));
             String value = (String) row.row.getCellValue(fromColumnIndex);
-
+            
             if (candidateRowNums != null) {
                 candidateRowNums.retainAll(model.columnIndicesMap.get(columnName)
                         .lookup(value, maxDistance, returnMaxRowCount)
@@ -134,10 +132,6 @@ public class FuzzyCross implements Function {
             resultRows.add(new WrappedRow(toProject, rowIndex, toProject.rows.get(rowIndex)));
         }
         return resultRows;
-    }
-
-    protected void parseParams(Object[] args) {
-
     }
 
     protected WrappedRow parseRowArg(Object v) {

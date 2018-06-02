@@ -35,16 +35,23 @@ var html = "text/html";
 var encoding = "UTF-8";
 var ClientSideResourceManager = Packages.com.google.refine.ClientSideResourceManager;
 
+var logger = Packages.org.slf4j.LoggerFactory.getLogger("fuzzy-match-extension");
+
 /*
  * Function invoked to initialize the extension.
  */
 function init() {
   // Packages.java.lang.System.err.println("Initializing sample extension");
   // Packages.java.lang.System.err.println(module.getMountPoint());
-  //var libPath = new Packages.java.io.File(module.getPath(), "MOD-INF/lib/jython/").getCanonicalPath();
+    var libPath = new Packages.java.io.File(module.getPath(), "MOD-INF/lib/jython/").getCanonicalPath();
+
+    logger.info("Registering Fuzzy Match Extension......");
+    var RS = Packages.com.google.refine.RefineServlet;
+    //register command
+    RS.registerCommand(module, "create-fuzzy-search-indices",
+        new Packages.com.vern1erca11per.refine.extension.fuzzymatch.symspell.CreateFuzzySearchIndicesCommand());
 
   //register change
-  var RS = Packages.com.google.refine.RefineServlet;
   RS.registerClassMapping("UpdateFuzzySearchIndicesModelChange",
   "com.vern1erca11per.refine.extension.fuzzymatch.symspell.UpdateFuzzyIndicesModelChange");
   RS.cacheClass(Packages.com.vern1erca11per.refine.extension.fuzzymatch.symspell.UpdateFuzzyIndicesModelChange);
@@ -75,42 +82,16 @@ function init() {
   );
 
 
-//  // Script files to inject into /project page
-//  ClientSideResourceManager.addPaths(
-//    "project/scripts",
-//    module,
-//    [
-//      "scripts/project-injection.js"
-//    ]
-//  );
+    // Script files to inject into /project page
+    ClientSideResourceManager.addPaths(
+        "project/scripts",
+        module,
+        [
+            "scripts/project-injection.js",
+            //"scripts/index/jquery.contextMenu.min.js",
+            //"scripts/index/jquery.ui.position.min.js"
+        ]
+    );
 
-  // Style files to inject into /project page
-//  ClientSideResourceManager.addPaths(
-//    "project/styles",
-//    module,
-//    [
-//      "styles/project-injection.less"
-//    ]
-//  );
+    logger.info("Fuzzy Match Extension Registration done!!");
 }
-
-/*
- * Function invoked to handle each request in a custom way.
- */
-//function process(path, request, response) {
-//  // Analyze path and handle this request yourself.
-//
-//  if (path == "/" || path == "") {
-//    var context = {};
-//    // here's how to pass things into the .vt templates
-//    context.someList = ["Superior","Michigan","Huron","Erie","Ontario"];
-//    context.someString = "foo";
-//    context.someInt = Packages.com.google.refine.sampleExtension.SampleUtil.stringArrayLength(context.someList);
-//
-//    send(request, response, "index.vt", context);
-//  }
-//}
-//
-//function send(request, response, template, context) {
-//  butterfly.sendTextFromTemplate(request, response, context, template, encoding, html);
-//}

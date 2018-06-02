@@ -1,0 +1,32 @@
+<div class="dialog-frame" style="width: 600px;">
+    <div class="dialog-border">
+        <div class="dialog-header" bind="dialogHeader"></div>
+        <div class="dialog-body" bind="dialogBody">
+            <div class="grid-layout layout-looser layout-full">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="grid-layout layout-tighter">
+                                <table>
+                                    <tr>
+                                        <td colspan="3"><h3><span bind="views_configIndices"></span></h3></td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td bind="views_distance"></td>
+                                        <td><input type="number" size="10" value="2" bind="distanceInput"/>
+                                        <td bind="views_prefixLength"></td>
+                                        <td><input type="number" size="10" value="2" bind="prefixLengthInput"/>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                </table>
+            </div>
+        </div>
+        <div class="dialog-footer" bind="dialogFooter">
+            <button class="button" bind="okButton"></button>
+            <button class="button" bind="cancelButton"></button>
+        </div>
+    </div>
+</div>
